@@ -1,0 +1,9 @@
+Update Account description with message if account phone was updated
+
+    public static void beforeUpdate(List <Account> newList, Map <Id,Account> oldMap){
+        for (Account acc : newList){
+            if (oldMap != null && acc.Phone != oldMap.get(acc.Id).Phone) {
+                acc.Description = 'Account Phone was Updated';
+            }
+        }
+    }

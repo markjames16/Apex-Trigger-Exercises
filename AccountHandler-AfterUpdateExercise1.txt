@@ -1,0 +1,27 @@
+If account is updated, populate all related Opps too
+
+public class AccountTriggerHandler {
+
+    public static void afterUpdate(List <Account> newList, Map <Id,Account> oldMap) {
+        Map <Id,Account> acctToMap = new Map <Id,Account>();
+       
+        
+        for(Account acc : newList) {
+           if (oldMap != null && acc.Phone != oldMap.get(acc.Id).Phone) {
+             acctToMap.put(acc.Id, acc);
+            } 
+        }
+ List <Opportunity> oppsToUpdate = new List <Opportunity>();
+        for (Opportunity opp :[SELECT Id,Account_Phone__c,AccountId FROM Opportunity WHERE AccountId IN :acctToMap.keySet()]){
+            Opportunity oppty = new Opportunity();
+            if (acctToMap.containsKey(opp.AccountId)) {
+               oppty.Id = opp.Id;
+               oppty.Account_Phone__c = acctToMap.get(opp.AccountId).Phone;
+                oppsToUpdate.add(oppty);
+            } 
+        }
+        if (!oppsToUpdate.isEmpty()){
+            update oppsToUpdate;
+        }
+    }
+}

@@ -1,0 +1,16 @@
+Create related Opp when an account is created
+
+public static void afterInsert(List<Account> newList){
+        List <Opportunity> oppList = new List <Opportunity>();
+        for (Account acct : newList) {
+          Opportunity opp = new Opportunity();
+            opp.Name = acct.Name;
+            opp.AccountId = acct.Id;
+            opp.StageName = 'Prospecting';
+            opp.CloseDate = System.today();
+            oppList.add(opp);
+        }
+        if(!oppList.isEmpty()){
+            insert oppList;
+        }
+    }
