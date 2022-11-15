@@ -1,0 +1,39 @@
+If account created has Media or Energy value on Industry field, populateb Rating field as Hot
+
+Trigger- Before Insert
+public class AccountHandler {
+    public static void updateRating(List <Account> newList) {
+        for (Account acc: newList){
+            if(acc.Industry =='Media'|| acc.Industry=='Energy') {
+                acc.Rating = 'Hot';
+            }
+        }
+    }
+}
+
+--------------------------------------------------------------------
+Test for AccountHandler 
+
+@isTest
+public class AccountTriggerHandlderTest {
+	@isTest
+    public static void updateRatingTest () {
+        //Create Sample Data
+        List <Account> acctList = new List <Account> ();
+        for (Integer i = 0;i<5;i++){
+            Account acc = new Account();
+            acc.Name = 'Test' + i;
+            acc.Industry = 'Energy';
+            acctList.add(acc);
+        }
+        //Insert Data
+        test.startTest();
+        insert acctList;
+        test.stopTest();
+        
+        List <Account> updatedContactsList = [SELECT Id,Rating FROM Account WHERE Id =: acctList[0].Id];
+        //Apply assert
+        System.assertEquals('Hot', updatedContactsList[0].Rating);
+    }
+}
+      
