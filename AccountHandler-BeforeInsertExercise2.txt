@@ -1,0 +1,47 @@
+Trigger Scenario: When an account record is created & CopyBillingTo Shipping custom field is checked, copy Accoount Billing address to Shipping Address
+
+
+***Account Handler***
+public class AccountHandler {
+    public static void copyAddress(List <Account> newList) {
+        for (Account accts : newList) {
+            if(accts.Copy_Billing_To_Shipping__c) {
+                accts.ShippingStreet = accts.BillingStreet;
+                accts.ShippingCity = accts.BillingCity;
+                accts.ShippingState = accts.BillingState;
+                accts.ShippingPostalCode = accts.BillingPostalCode;
+                accts.ShippingCountry = accts.BillingCountry;
+            }
+        }
+    }
+}
+
+***Account Test***
+@isTest
+public class AccountTriggerHandlderTest {
+	@isTest
+    public static void copyAddressTest () {
+        //Create Sample Data
+        List <Account> acctList = new List <Account> ();
+        for (Integer i = 0;i<5;i++){
+            Account accts = new Account();
+            accts.Name = 'Test' + i;
+            accts.Industry = 'Energy';
+            accts.ShippingStreet = '4536 PAG ASA EXTENSION';
+            accts.ShippingCity = 'V.MAPA';
+            accts.ShippingState = 'STA. MESA' ;
+            accts.ShippingPostalCode = '1016';
+            accts.ShippingCountry = 'PH';
+            accts.Copy_Billing_To_Shipping__c = true;
+			acctList.add(accts);
+        }
+        //Insert Data
+        test.startTest();
+        insert acctList;
+        test.stopTest();
+        
+        List <Account> updatedContactsList = [SELECT Id,ShippingStreet FROM Account WHERE Id =: acctList[0].Id];
+        //Apply assert
+        System.assertEquals('4536 PAG ASA EXTENSION', updatedContactsList[0].ShippingStreet);
+    }
+}
