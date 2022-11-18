@@ -1,0 +1,48 @@
+Trigger Scenario: Upon opp record creation, if amount is between 100000
+to 500000 then populate 'Hot opportunity' in descriptionn field.
+
+
+***Trigger***
+trigger OpportunityTrigger on Opportunity (before insert) {
+    if (Trigger.isBefore && Trigger.isInsert) {
+      OpportunityHandler.updateDescription(Trigger.New);  
+    }
+}
+
+
+***Handler***
+public class OpportunityHandler {
+    public static void updateDescription(List <Opportunity> newList) {
+        for (Opportunity opp: newList) {
+            if (opp.Amount != null && opp.Amount >= 100000 && opp.Amount <= 500000) {
+                opp.Description = 'Hot Opportuniy';
+            }
+        }
+    }
+}
+
+***HandlerTest***
+@isTest
+public class OppHandlerTest {
+	@isTest
+    public static void updateDescTest () {
+        //create sample date
+        List <Opportunity> oppList = new List <Opportunity> ();
+        for (Integer i=0;i<5;i++) {
+            Opportunity opp1 = new Opportunity();
+            opp1.Name = 'Test Opp' + i;
+            opp1.Amount = 150000;
+            opp1.StageName = 'Prospecting';
+            opp1.CloseDate = System.today();
+            oppList.add(opp1);
+        }
+        //insert Data
+        Test.startTest();
+        insert oppList;
+        Test.stopTest();
+        
+        List <Opportunity> oppsUpdated = [SELECT Id,Description FROM Opportunity WHERE Id = :oppList[0].Id];
+        //Apply Assert
+        System.assertEquals('Hot Opportuniy', oppsUpdated[0].Description);
+    }
+}
