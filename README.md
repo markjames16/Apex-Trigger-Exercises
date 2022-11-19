@@ -1,1 +1,1 @@
-# Apex-Trigger-Projects
+# Apex-Trigger-Exercises
