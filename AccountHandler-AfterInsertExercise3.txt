@@ -1,0 +1,72 @@
+Trigger Scenario: 
+On Account, two checkbox are available:
+New Contact and New Opportunity
+
+On account creation-
+if new contact checkbox is checked then related Contact should be created
+if new opportunity checkbox is checked and Active field= Yes, then related Opp shoukd be created
+
+
+***Account Handler***
+public class AccountHandler {
+    public static void createRelatedContactsAndOpps(List <Account> newList) {
+		List <Contact> conList = new List <Contact>();
+        List <Opportunity> oppList = new List <Opportunity>();
+        
+        for (Account acc : newList) {
+            if (acc.New_Contact__c) {
+               Contact con = new Contact();
+               con.LastName = acc.Name;
+               con.AccountId = acc.Id;
+               conList.add(con);
+            }
+            if (acc.New_Opportunity__c && acc.Active__c == 'Yes') {
+          	  Opportunity opp = new Opportunity();
+          	  opp.Name = acc.Name;
+           	  opp.AccountId = acc.Id;
+           	  opp.CloseDate = System.today();
+              opp.StageName = 'Prospecting';
+              oppList.add(opp);
+            }
+        }
+        
+        if (!conList.isEmpty()){
+            insert conList;
+        }
+        if (!oppList.isEmpty()) {
+            insert oppList;
+        }
+    }
+}
+
+
+***AccountTriggerHandlderTest***
+@isTest
+public class AccountTriggerHandlderTest {
+	@isTest
+    public static void createRelatedContactAndOppsTest () {
+        //Create Sample Data
+        List <Account> acctList = new List <Account> ();
+        for (Integer i = 0;i<5;i++){
+            Account accts = new Account();
+            accts.Name = 'Test' + i;
+            if (Math.mod(i, 2) == 0) {
+                accts.New_Contact__c = true;
+            } else {
+                accts.New_Opportunity__c = true;
+                accts.Active__c = 'Yes';
+            }
+			acctList.add(accts);
+        }
+        //Insert Data
+        test.startTest();
+        insert acctList;
+        test.stopTest();
+        
+		List <Contact> conList = [SELECT Id FROM Contact WHERE AccountId = :acctList[0].id];
+        List <Opportunity> oppList = [SELECT Id FROM Opportunity WHERE AccountId = :acctList[0].id];
+        
+        System.assert(conList != null, 'Contact not created');
+        System.assert(oppList != null, 'Opp not created');
+    }
+}
