@@ -1,0 +1,65 @@
+Trigger Scenario:
+When Account Phone is Updated populate Accounts Phone Number on all related Contacts in Home Phone Field
+
+***TriggerHandler***
+public class AccountHandler {
+    public static void updateRelatedContactPhone(List <Account> newList ,Map<Id,Account> oldMap) {
+	Map <Id,Account> accToMap = new Map <Id,Account>();
+    
+        for (Account acc : newList) {
+            if(acc.Phone != null && acc.Phone != oldMap.get(acc.Id).phone){
+                accToMap.put(acc.Id, acc);
+            }
+        }
+        
+   List <Contact> consToUpdate = new List <Contact>();
+        
+        for (Contact con : [SELECT Id,HomePhone, Accountid FROM Contact WHERE AccountId IN :accToMap.keySet()] ) {
+            if (accToMap.containsKey(con.AccountId)) {
+                con.HomePhone = accToMap.get(con.AccountId).Phone;
+                consToUpdate.add(con);
+            }
+        }
+        
+        if (!consToUpdate.isEmpty()) {
+            update consToUpdate;
+        }
+	}
+}
+
+***AccountTriggerHandlderTest***
+@isTest
+public class AccountTriggerHandlderTest {
+	@isTest
+    public static void createRelatedContactAndOppsTest () {
+        //Create Sample Data
+        List <Account> acctList = new List <Account> ();
+        for (Integer i = 0;i<5;i++){
+            Account accts = new Account();
+            accts.Name = 'Test'+i;
+            accts.Phone = '09562642322';
+			acctList.add(accts);
+        } 
+        //Perform Update DML on Data
+        test.startTest();
+        insert acctList;
+        
+        List <Contact> conList = new List <Contact>();
+        for (Account accts: acctList) {
+            Contact con = new Contact();
+            con.LastName = accts.Name;
+            con.AccountId = accts.Id;
+            conList.add(con);
+        }
+        insert conList;
+        
+        for (Account acct : acctList) {
+            acct.Phone = '09996540506';
+        }
+        update acctList;
+        test.stopTest();
+        
+        List <Contact> updatedContact = [SELECT Id,HomePhone,AccountId 	FROM Contact WHERE AccountId = :conList[0].Id];
+	System.assertEquals('09996540506', updatedContact		[0].HomePhone);
+    }
+}
