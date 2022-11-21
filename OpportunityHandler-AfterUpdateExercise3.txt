@@ -1,0 +1,56 @@
+Trigger Scenario:
+When an Opp stage is changed, create a Task record on Opp and assign it to Logged In user/Opp owner
+
+***OpportunityHandler***
+public class OpportunityHandler {
+    public static void createTaskOnOpp (List <Opportunity> newList, Map<Id,Opportunity> oldOpp) {
+		List <Task> taskList = new List <Task>();
+        
+        for(Opportunity opps : newList) {
+            if(oldOpp !=null && opps.StageName != oldOpp.get(opps.Id).StageName){
+            Task tsk = new Task();
+            tsk.WhatId = Opps.id;
+            tsk.Subject = 'This is a new task';
+            tsk.Priority = 'Normal';
+            tsk.Status = 'Not Started';
+            tsk.OwnerId = opps.OwnerId;
+           taskList.add(tsk);
+            }
+        }
+        
+        if (!taskList.isempty()){
+            insert taskList;
+        }
+    }
+}
+
+***OppHandlerTest***
+@isTest
+public class OppHandlerTest {
+	@isTest
+    public static void createTaskTest () {
+        //create sample date
+        List <Opportunity> oppList = new List <Opportunity> ();
+        for (Integer i=0;i<5;i++) {
+            Opportunity opp1 = new Opportunity();
+            opp1.Name = 'Test Opp' + i;
+            opp1.Amount = 150000;
+            opp1.StageName = 'Prospecting';
+            opp1.CloseDate = System.today();
+            oppList.add(opp1);
+        }
+        //insert Data
+        Test.startTest();
+        insert oppList;
+        
+        for (Opportunity oppNeedToUpdate : oppList) {
+            oppNeedToUpdate.StageName = 'Qualification';
+        }
+        update oppList;
+        Test.stopTest();
+        
+        List <Task> taskCreated = [SELECT Id,OwnerId FROM Task WHERE WhatId = :oppList[0].Id];
+		System.assert(taskCreated != null, 'Task not Created');
+        
+    }
+}
